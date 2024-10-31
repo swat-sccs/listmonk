@@ -311,7 +311,12 @@ export default Vue.extend({
         lists: [],
         tags: [],
         sendAt: null,
-        content: { contentType: 'richtext', body: '', bodySource: null, templateId: null },
+        content: {
+          contentType: 'richtext',
+          body: '',
+          bodySource: null,
+          templateId: null,
+        },
         altbody: null,
         media: [],
 
@@ -431,7 +436,12 @@ export default Vue.extend({
           archiveMetaStr: data.archiveMeta ? JSON.stringify(data.archiveMeta, null, 4) : '{}',
 
           // The structure that is populated by editor input event.
-          content: { contentType: data.contentType, body: data.body, bodySource: data.bodySource, templateId: data.templateId },
+          content: {
+            contentType: data.contentType,
+            body: data.body,
+            bodySource: data.bodySource,
+            templateId: data.templateId,
+          },
         };
         this.isAttachFieldVisible = this.form.media.length > 0;
 
