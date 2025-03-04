@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/mail"
 	"net/url"
@@ -170,8 +171,12 @@ func handleOIDCFinish(c echo.Context) error {
 	}
 	email = strings.ToLower(em.Address)
 
+	name := strings.TrimSpace(claims.Name)
+	username := strings.TrimSpace(claims.UserName)
+	roles := claims.Roles
+
 	// Get the user by e-mail received from OIDC.
-	user, err := app.core.GetUser(0, "", email)
+	user, err := app.core.GetUser(0, username, email,name, roles)
 	if err != nil {
 		return renderLoginPage(c, err)
 	}
@@ -365,6 +370,7 @@ func doLoginSetup(c echo.Context) error {
 		Type: models.RoleTypeUser,
 		Name: null.NewString("Super Admin", true),
 	}
+	
 	for p := range app.constants.Permissions {
 		r.Permissions = append(r.Permissions, p)
 	}
@@ -372,6 +378,23 @@ func doLoginSetup(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	//create basic user role -dcrepublic
+	b := models.Role{
+		Type: models.RoleTypeUser,
+		Name: null.NewString("User", true),
+	}
+	
+	for p := range app.constants.Permissions {
+		b.Permissions = append(b.Permissions, p)
+	}
+	role2, err2 := app.core.CreateRole(b)
+	if err2 != nil {
+		return err2
+	}
+	fmt.Print(role2)
+	fmt.Print(role2.ID)
+
 
 	// Create the super admin user.
 	u := models.User{
@@ -401,4 +424,8 @@ func doLoginSetup(c echo.Context) error {
 	}
 
 	return nil
+}
+
+func printf(role2 models.Role) {
+	panic("unimplemented")
 }

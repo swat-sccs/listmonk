@@ -975,7 +975,7 @@ func initAuth(db *sql.DB, ko *koanf.Koanf, co *core.Core) (bool, *auth.Auth) {
 			return nil
 		},
 		GetUser: func(id int) (models.User, error) {
-			return co.GetUser(id, "", "")
+			return co.GetUser(id, "", "", "", "")
 		},
 	}
 

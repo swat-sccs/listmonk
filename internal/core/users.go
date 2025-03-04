@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/knadh/listmonk/internal/utils"
 	"github.com/knadh/listmonk/models"
@@ -23,10 +24,33 @@ func (c *Core) GetUsers() ([]models.User, error) {
 }
 
 // GetUser retrieves a specific user based on any one given identifier.
-func (c *Core) GetUser(id int, username, email string) (models.User, error) {
+func (c *Core) GetUser(id int, username, email string, name string, roles string) (models.User, error) {
 	var out models.User
 	if err := c.q.GetUser.Get(&out, id, username, email); err != nil {
+		userRoleid := 2
+		if(strings.Contains(roles, "admin") ){
+			userRoleid = 1
+		}else{
+			userRoleid = 2
+		}
+		//COMEBACKHERE
 		if err == sql.ErrNoRows {
+			// Create the super admin user.
+			u := models.User{
+				Type:          models.UserTypeUser,
+				HasPassword:   false,
+				PasswordLogin: false,
+				Username:      username,
+				Name:          name,
+				//Password:      null.NewString(email, true),
+				Email:         null.NewString(email, true),
+				UserRoleID:    userRoleid,
+				Status:        models.UserStatusEnabled,
+			}
+			if _, err := c.CreateUser(u); err == nil {
+				return c.formatUsers([]models.User{out})[0], nil
+			}
+			
 			return out, echo.NewHTTPError(http.StatusInternalServerError,
 				c.i18n.Ts("globals.messages.notFound", "name", "{globals.terms.user}"))
 
@@ -68,7 +92,7 @@ func (c *Core) CreateUser(u models.User) (models.User, error) {
 		u.Password = null.String{Valid: false}
 	}
 
-	out, err := c.GetUser(id, "", "")
+	out, err := c.GetUser(id, "", "", "", "")
 	return out, err
 }
 
@@ -91,7 +115,7 @@ func (c *Core) UpdateUser(id int, u models.User) (models.User, error) {
 		return models.User{}, echo.NewHTTPError(http.StatusBadRequest, c.i18n.T("users.needSuper"))
 	}
 
-	out, err := c.GetUser(id, "", "")
+	out, err := c.GetUser(id, "", "", "", "")
 
 	return out, err
 }
@@ -109,7 +133,7 @@ func (c *Core) UpdateUserProfile(id int, u models.User) (models.User, error) {
 			c.i18n.Ts("globals.messages.notFound", "name", "{globals.terms.user}"))
 	}
 
-	return c.GetUser(id, "", "")
+	return c.GetUser(id, "", "", "", "")
 }
 
 // UpdateUserLogin updates a user's record post-login.
