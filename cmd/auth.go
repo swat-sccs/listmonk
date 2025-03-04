@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
+
 	"net/http"
 	"net/mail"
 	"net/url"
@@ -379,7 +379,9 @@ func doLoginSetup(c echo.Context) error {
 		return err
 	}
 
-	//create basic user role -dcrepublic
+	//create basic user role - dcrepublic
+	// Could set defualt, or on first run go in and set it yourself
+	//user_perms := []string{"lists:get_all", "subscribers:import", "subscribers:get_all"}
 	b := models.Role{
 		Type: models.RoleTypeUser,
 		Name: null.NewString("User", true),
@@ -388,12 +390,11 @@ func doLoginSetup(c echo.Context) error {
 	for p := range app.constants.Permissions {
 		b.Permissions = append(b.Permissions, p)
 	}
-	role2, err2 := app.core.CreateRole(b)
-	if err2 != nil {
-		return err2
+	
+	if _, err := app.core.CreateRole(b); err != nil {
+		return err
 	}
-	fmt.Print(role2)
-	fmt.Print(role2.ID)
+	
 
 
 	// Create the super admin user.

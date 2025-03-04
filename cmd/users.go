@@ -32,7 +32,8 @@ func handleGetUsers(c echo.Context) error {
 	}
 
 	if single {
-		out, err := app.core.GetUser(userID, "", "", "", "")
+		var emptySlice []string
+		out, err := app.core.GetUser(userID, "", "", "",  emptySlice)
 		if err != nil {
 			return err
 		}
@@ -156,7 +157,8 @@ func handleUpdateUser(c echo.Context) error {
 				}
 			} else {
 				// Get the existing user for password validation.
-				user, err := app.core.GetUser(id, "", "", "", "")
+				var emptySlice []string
+				user, err := app.core.GetUser(id, "", "", "", emptySlice)
 				if err != nil {
 					return err
 				}

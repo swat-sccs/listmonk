@@ -41,7 +41,7 @@ type OIDCclaim struct {
 	Name 	  string `json:"name"`
 	LastName  	  string `json:"family_name"`
 	UserName      string `json:"preferred_username"`
-	Roles        string `json:"admin"`
+	Roles        []string `json:"roles"`
 }
 
 type OIDCConfig struct {
@@ -212,7 +212,7 @@ func (o *Auth) ExchangeOIDCToken(code, nonce string) (string, OIDCclaim, error) 
 
 
 	// If claims doesn't have the e-mail, attempt to fetch it from the userinfo endpoint.
-	if claims.Email == "" || claims.Name == "" || claims.UserName == "" || claims.Roles == ""{
+	if claims.Email == "" || claims.Name == "" || claims.UserName == "" {
 		userInfo, err := o.provider.UserInfo(context.TODO(), oauth2.StaticTokenSource(tk))
 		if err != nil {
 			return "", OIDCclaim{}, errors.New("error fetching user info from OIDC")

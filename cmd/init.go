@@ -954,7 +954,7 @@ func initAuth(db *sql.DB, ko *koanf.Koanf, co *core.Core) (bool, *auth.Auth) {
 
 	if ko.Bool("security.oidc.enabled") {
 		oidcCfg = auth.OIDCConfig{
-			Enabled:      true,
+			Enabled: true,
 			ProviderURL:  ko.String("security.oidc.provider_url"),
 			ClientID:     ko.String("security.oidc.client_id"),
 			ClientSecret: ko.String("security.oidc.client_secret"),
@@ -975,7 +975,8 @@ func initAuth(db *sql.DB, ko *koanf.Koanf, co *core.Core) (bool, *auth.Auth) {
 			return nil
 		},
 		GetUser: func(id int) (models.User, error) {
-			return co.GetUser(id, "", "", "", "")
+			var emptySlice []string
+			return co.GetUser(id, "", "", "", emptySlice)
 		},
 	}
 

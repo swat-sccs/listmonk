@@ -3,8 +3,9 @@ package core
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"strings"
+	"slices"
 
 	"github.com/knadh/listmonk/internal/utils"
 	"github.com/knadh/listmonk/models"
@@ -24,18 +25,23 @@ func (c *Core) GetUsers() ([]models.User, error) {
 }
 
 // GetUser retrieves a specific user based on any one given identifier.
-func (c *Core) GetUser(id int, username, email string, name string, roles string) (models.User, error) {
+func (c *Core) GetUser(id int, username, email string, name string, roles []string) (models.User, error) {
+	
 	var out models.User
+	therole := 2
 	if err := c.q.GetUser.Get(&out, id, username, email); err != nil {
-		userRoleid := 2
-		if(strings.Contains(roles, "admin") ){
-			userRoleid = 1
+
+		if(slices.Contains(roles, "admin") ){
+			therole = 1
+			fmt.Print("SUPER ADMIN DETECTED")
 		}else{
-			userRoleid = 2
+			therole = 2
 		}
+
 		//COMEBACKHERE
 		if err == sql.ErrNoRows {
 			// Create the super admin user.
+
 			u := models.User{
 				Type:          models.UserTypeUser,
 				HasPassword:   false,
@@ -44,15 +50,19 @@ func (c *Core) GetUser(id int, username, email string, name string, roles string
 				Name:          name,
 				//Password:      null.NewString(email, true),
 				Email:         null.NewString(email, true),
-				UserRoleID:    userRoleid,
+				UserRoleID:    therole,
 				Status:        models.UserStatusEnabled,
 			}
-			if _, err := c.CreateUser(u); err == nil {
-				return c.formatUsers([]models.User{out})[0], nil
-			}
 			
-			return out, echo.NewHTTPError(http.StatusInternalServerError,
+			if u, err := c.CreateUser(u); err != nil {
+				out = u;
+				return u, echo.NewHTTPError(http.StatusInternalServerError,
 				c.i18n.Ts("globals.messages.notFound", "name", "{globals.terms.user}"))
+			}
+					
+			return  c.formatUsers([]models.User{out})[0], nil
+			//return out, echo.NewHTTPError(http.StatusInternalServerError,
+			//	c.i18n.Ts("globals.messages.notFound", "name", "{globals.terms.user}"))
 
 		}
 
@@ -91,8 +101,8 @@ func (c *Core) CreateUser(u models.User) (models.User, error) {
 	if u.Type != models.UserTypeAPI {
 		u.Password = null.String{Valid: false}
 	}
-
-	out, err := c.GetUser(id, "", "", "", "")
+	var emptySlice []string
+	out, err := c.GetUser(id, "", "", "",emptySlice)
 	return out, err
 }
 
@@ -115,7 +125,8 @@ func (c *Core) UpdateUser(id int, u models.User) (models.User, error) {
 		return models.User{}, echo.NewHTTPError(http.StatusBadRequest, c.i18n.T("users.needSuper"))
 	}
 
-	out, err := c.GetUser(id, "", "", "", "")
+	var emptySlice []string
+	out, err := c.GetUser(id, "", "", "", emptySlice)
 
 	return out, err
 }
@@ -133,7 +144,8 @@ func (c *Core) UpdateUserProfile(id int, u models.User) (models.User, error) {
 			c.i18n.Ts("globals.messages.notFound", "name", "{globals.terms.user}"))
 	}
 
-	return c.GetUser(id, "", "", "", "")
+	var emptySlice []string
+	return c.GetUser(id, "", "", "", emptySlice)
 }
 
 // UpdateUserLogin updates a user's record post-login.
